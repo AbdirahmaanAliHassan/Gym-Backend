@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(MEMBER)
+  firstName     String?
+  lastName      String?
+  createdAt     DateTime @default(now())
+  trainer       Trainer?
+  member        Member?
+  
+}
+
+model Member {
+  id                    Int       @id @default(autoincrement())
+  user                  User?     @relation(fields: [userId], references: [id])
+  userId                Int?       @unique
+  firstName             String
+  lastName              String?
+  dob                   DateTime?
+  phone                 String?
+  photoUrl              String?
+  status                MembershipStatus @default(ACTIVE)
+  joinedAt              DateTime  @default(now())
+  membershipExpiresAt   DateTime?
+  payments              Payment[]
+  attendance            Attendance[]
+  assignments           MemberTrainerAssignment[]
+
+  classBookings ClassBooking[]
+}
+
+model MembershipPlan {
+  id           Int      @id @default(autoincrement())
+  name         String @unique
+  durationDays Int
+  price        Float
+  benefits     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  payments     Payment[]
+}
+
+
+
+model Payment {
+  id                 Int       @id @default(autoincrement())
+  member             Member    @relation(fields: [memberId], references: [id])
+  memberId           Int
+  membershipPlan     MembershipPlan? @relation(fields: [membershipPlanId], references: [id])
+  membershipPlanId   Int?
+  amount             Float
+  method             String?
+  paidAt             DateTime  @default(now())
+  transactionRef     String?
+  status             PaymentStatus @default(PAID)
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  member    Member   @relation(fields: [memberId], references: [id])
+  memberId  Int
+  checkIn   DateTime @default(now())
+  checkOut  DateTime?
+  source    String?
+}
+
+model Trainer {
+  id         Int     @id @default(autoincrement())
+  user       User    @relation(fields: [userId], references: [id])
+  userId     Int     @unique
+  bio        String?
+  specialties String?
+  phone      String?
+  assignments MemberTrainerAssignment[]
+  classes    Class[]
+}
+
+model MemberTrainerAssignment {
+  id         Int      @id @default(autoincrement())
+  member     Member   @relation(fields: [memberId], references: [id])
+  memberId   Int
+  trainer    Trainer  @relation(fields: [trainerId], references: [id])
+  trainerId  Int
+  assignedAt DateTime @default(now())
+  endedAt    DateTime?
+}
+
+model Class {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  trainer     Trainer? @relation(fields: [trainerId], references: [id])
+  trainerId   Int?
+  startTime   DateTime?
+  capacity    Int      @default(20)
+  bookings    ClassBooking[]
+}
+
+model ClassBooking {
+  id        Int      @id @default(autoincrement())
+  classItem Class    @relation(fields: [classId], references: [id])
+  classId   Int
+  member    Member   @relation(fields: [memberId], references: [id])
+  memberId  Int
+  bookedAt  DateTime @default(now())
+  status    String   @default("booked")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  TRAINER
+  MEMBER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  PENDING
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  FAILED
+}
