@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth';
-import memberRoutes from './routes/members';
-import paymentRoutes from './routes/payments';
-import attendanceRoutes from './routes/attendance';
+import authRoutes from './routes/authRoutes';
+import memberRoutes from './routes/memberRoutes';
+import paymentRoutes from './routes/paymentRoutes';
+import attendanceRoutes from './routes/attendanceRoutes';
 
 dotenv.config();
 
